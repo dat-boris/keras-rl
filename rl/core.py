@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
+import numbers
 from copy import deepcopy
 
 import numpy as np
@@ -196,7 +197,7 @@ class Agent(object):
                         r = unprocessed_reward
                         done = unprocessed_done
                     for key, value in info.items():
-                        if not np.isreal(value):
+                        if not isinstance(value, numbers.Number):
                             continue
                         if key not in accumulated_info:
                             accumulated_info[key] = np.zeros_like(value)
@@ -387,7 +388,7 @@ class Agent(object):
                     callbacks.on_action_end(action)
                     reward += r
                     for key, value in info.items():
-                        if not np.isreal(value):
+                        if not isinstance(value, numbers.Number):
                             continue
                         if key not in accumulated_info:
                             accumulated_info[key] = np.zeros_like(value)
