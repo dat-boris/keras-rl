@@ -1,6 +1,8 @@
 from __future__ import division
 import warnings
 
+from os.path import splitext
+
 from rl.core import Agent, Processor
 
 
@@ -13,7 +15,8 @@ class MultiAgent(Agent):
         self._training = False
         self._step = 0
 
-        super(MultiAgent, self).__init__(processor=MultiAgentProcessor())
+        super(MultiAgent, self).__init__(
+            processor=MultiAgentProcessor(), process_feedback=False)
 
     @property
     def num_agents(self):
@@ -35,7 +38,6 @@ class MultiAgent(Agent):
 
     @step.setter
     def step(self, s):
-        #print "setting step %i" % s
         self._step = s
         for agent in self.agents:
             agent.step = s
@@ -70,6 +72,13 @@ class MultiAgent(Agent):
         # Returns
             List of metrics values
         """
+        if not isinstance(reward, list):
+            # This is the case when agent had not seen the enviroment
+            # see core.Agent: fit for case
+            assert reward == 0
+            reward = [0.] * self.num_agents
+            terminal = [terminal] * self.num_agents
+
         assert len(reward) == self.num_agents
         assert len(terminal) == self.num_agents
 

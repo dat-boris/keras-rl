@@ -39,10 +39,11 @@ class Agent(object):
         processor (`Processor` instance): See [Processor](#processor) for details.
     """
 
-    def __init__(self, processor=None):
+    def __init__(self, processor=None, process_feedback=True):
         self.processor = processor
         self.training = False
         self.step = 0
+        self.process_feedback = process_feedback
 
     def get_config(self):
         """Configuration of the agent for serialization.
@@ -183,11 +184,17 @@ class Agent(object):
                 done = False
                 for _ in range(action_repetition):
                     callbacks.on_action_begin(action)
-                    observation, r, done, info = env.step(action)
+                    (observation, unprocessed_reward, unprocessed_done,
+                        info) = env.step(action)
                     observation = deepcopy(observation)
                     if self.processor is not None:
-                        observation, r, done, info = self.processor.process_step(
-                            observation, r, done, info)
+                        (observation, r, done,
+                            info) = self.processor.process_step(
+                                observation, unprocessed_reward,
+                                unprocessed_done, info)
+                    else:
+                        r = unprocessed_reward
+                        done = unprocessed_done
                     for key, value in info.items():
                         if not np.isreal(value):
                             continue
@@ -201,7 +208,12 @@ class Agent(object):
                 if nb_max_episode_steps and episode_step >= nb_max_episode_steps - 1:
                     # Force a terminal state.
                     done = True
-                metrics = self.backward(reward, terminal=done)
+                if self.process_feedback:
+                    metrics = self.backward(reward, terminal=done)
+                else:
+                    # TODO: Reward is not aggregated for all actions
+                    metrics = self.backward(unprocessed_reward,
+                                            terminal=unprocessed_done)
                 episode_reward += reward
 
                 step_logs = {
@@ -362,11 +374,16 @@ class Agent(object):
                 accumulated_info = {}
                 for _ in range(action_repetition):
                     callbacks.on_action_begin(action)
-                    observation, r, d, info = env.step(action)
+                    (observation, unprocessed_reward, unprocessed_done,
+                        info) = env.step(action)
                     observation = deepcopy(observation)
                     if self.processor is not None:
                         observation, r, d, info = self.processor.process_step(
-                            observation, r, d, info)
+                            observation, unprocessed_reward, unprocessed_done,
+                            info)
+                    else:
+                        r = unprocessed_reward
+                        d = unprocessed_done
                     callbacks.on_action_end(action)
                     reward += r
                     for key, value in info.items():
@@ -380,7 +397,10 @@ class Agent(object):
                         break
                 if nb_max_episode_steps and episode_step >= nb_max_episode_steps - 1:
                     done = True
-                self.backward(reward, terminal=done)
+                if self.process_feedback:
+                    self.backward(reward, terminal=done)
+                else:
+                    self.backward(unprocessed_reward, terminal=unprocessed_done)
                 episode_reward += reward
 
                 step_logs = {
