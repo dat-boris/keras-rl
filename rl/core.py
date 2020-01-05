@@ -540,6 +540,7 @@ class Processor(object):
         observation = self.process_observation(observation)
         reward = self.process_reward(reward)
         info = self.process_info(info)
+        done = self.process_done(done)
         return observation, reward, done, info
 
     def process_observation(self, observation):
@@ -577,6 +578,17 @@ class Processor(object):
             Info obtained by the environment processed
         """
         return info
+
+    def process_done(self, done):
+        """Process done flag as obtained from the environment.
+
+        # Arguments
+            done (any): A flag to signifies if agent is done
+
+        # Returns
+            (bool) Done flag returned
+        """
+        return done
 
     def process_action(self, action):
         """Processes an action predicted by an agent but before execution in an environment.
