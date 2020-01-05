@@ -7,6 +7,19 @@ from rl.core import Agent, Processor
 
 
 class MultiAgent(Agent):
+    """An agent which handles multiagent environment from ma_gym
+
+    This Agent allows interfacing with MultiAgent open gym environment based
+    on ma-gym (https://github.com/koulanurag/ma-gym) specification.
+
+    (tl;dr: each step will process a tuple of action [player1-action, player2-action....]
+    and observation will also takes similar tuples of state, rewards, etc.)
+
+    Acknowledgement: based on https://github.com/velochy/rl-bargaining/blob/master/interleaved.py
+
+    Comparable in that interleaved agent will expect a sequence order of action
+    and advance on each forward evaluation.
+    """
     def __init__(self, agents):
         self.agents = agents
 
