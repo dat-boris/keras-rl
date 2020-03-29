@@ -20,6 +20,7 @@ class MultiAgent(Agent):
     Comparable in that interleaved agent will expect a sequence order of action
     and advance on each forward evaluation.
     """
+
     def __init__(self, agents):
         self.agents = agents
 
@@ -29,7 +30,8 @@ class MultiAgent(Agent):
         self._step = 0
 
         super(MultiAgent, self).__init__(
-            processor=MultiAgentProcessor(), process_feedback=False)
+            processor=MultiAgentProcessor(), process_feedback=False
+        )
 
     @property
     def num_agents(self):
@@ -89,7 +91,7 @@ class MultiAgent(Agent):
             # This is the case when agent had not seen the enviroment
             # see core.Agent: fit for case
             assert reward == 0
-            reward = [0.] * self.num_agents
+            reward = [0.0] * self.num_agents
             terminal = [terminal] * self.num_agents
 
         assert len(reward) == self.num_agents
@@ -98,10 +100,10 @@ class MultiAgent(Agent):
         metrics = []
         for i in range(self.num_agents):
             agent = self.agents[i]
-            metrics.extend(
-                agent.backward(reward[i], terminal[i])
-            )
-        assert len(metrics) == len(self.m_names)
+            metrics.extend(agent.backward(reward[i], terminal[i]))
+        assert len(metrics) == len(
+            self.m_names
+        ), f"Metrics {metrics} should be same as {self.m_names}"
         return metrics
 
     def compile(self, optimizer, metrics=[]):
@@ -118,10 +120,9 @@ class MultiAgent(Agent):
         for i, agent in enumerate(self.agents):
             if not agent.compiled:
                 agent.compile(optimizer[i], metrics)
-                self.m_names.extend([
-                    f"agent_{i}_{m_name}"
-                    for m_name in agent.metrics_names
-                ])
+            self.m_names.extend(
+                [f"agent_{i}_{m_name}" for m_name in agent.metrics_names]
+            )
         self.compiled = True
 
     def load_weights(self, filepath):
@@ -131,7 +132,7 @@ class MultiAgent(Agent):
         """
         fbase, fext = splitext(filepath)
         for i, agent in enumerate(self.agents):
-            agent.load_weights('%s%i%s' % (fbase, i, fext))
+            agent.load_weights("%s%i%s" % (fbase, i, fext))
 
     def save_weights(self, filepath, overwrite=False):
         """Saves the weights of an agent as an HDF5 file.
@@ -141,7 +142,7 @@ class MultiAgent(Agent):
         """
         fbase, fext = splitext(filepath)
         for i, agent in enumerate(self.agents):
-            agent.save_weights('%s%i%s' % (fbase, i, fext), overwrite)
+            agent.save_weights("%s%i%s" % (fbase, i, fext), overwrite)
 
     @property
     def layers(self):
@@ -151,8 +152,7 @@ class MultiAgent(Agent):
         # Returns
             A list of the model's layers
         """
-        return [layer for agent in self.agents
-                for layer in agent.layers()]
+        return [layer for agent in self.agents for layer in agent.layers()]
 
     @property
     def metrics_names(self):
