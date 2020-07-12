@@ -67,6 +67,7 @@ class MultiAgent(Agent):
         If the policy is implemented by a neural network, this corresponds to a forward (inference) pass.
         # Argument
             observation (object): The current observation from the environment.
+            If observation is None, we do not forward action to agent.
         # Returns
             The next action to be executed in the environment.
         """
@@ -74,8 +75,11 @@ class MultiAgent(Agent):
 
         actions = []
         for i, obs in enumerate(observation):
-            # TODO: what happens if the agent is terminated?
-            actions.append(self.agents[i].forward(obs))
+            # Only forward actions if observation is not None
+            if obs is not None:
+                actions.append(self.agents[i].forward(obs))
+            else:
+                actions.append(None)
         return actions
 
     def backward(self, reward, terminal):
