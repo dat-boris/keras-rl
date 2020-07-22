@@ -23,6 +23,8 @@ class MultiAgent(Agent):
 
     def __init__(self, agents):
         self.agents = agents
+        # Describe if we have forwarded observation to the agent.
+        self.agents_forwarded = [False for _ in agents]
 
         self.compiled = False
         self.m_names = []
@@ -78,8 +80,10 @@ class MultiAgent(Agent):
             # Only forward actions if observation is not None
             if obs is not None:
                 actions.append(self.agents[i].forward(obs))
+                self.agents_forwarded[i] = True
             else:
                 actions.append(None)
+                self.agents_forwarded[i] = False
         return actions
 
     def backward(self, reward, terminal):
@@ -104,7 +108,13 @@ class MultiAgent(Agent):
         metrics = []
         for i in range(self.num_agents):
             agent = self.agents[i]
-            metrics.extend(agent.backward(reward[i], terminal[i]))
+            # Do no set forwarding agent if it has not been previously forwarded
+            if self.agents_forwarded[i]:
+                metrics.extend(agent.backward(reward[i], terminal[i]))
+            else:
+                example_metrics = [None for _ in agent.metrics_names]
+                metrics.extend(example_metrics)
+        self.agents_forwarded = [False for _ in self.agents_forwarded]
         assert len(metrics) == len(
             self.m_names
         ), f"Metrics {metrics} should be same as {self.m_names}"
